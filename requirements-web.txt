@@ -1,0 +1,20 @@
+# MarkForge Web App Dependencies
+# Python 3.10+ required
+
+# Web framework
+flask>=3.0.0
+gunicorn>=21.0.0
+
+# Markdown processing
+markdown>=3.5.0
+pygments>=2.17.0
+
+# PDF generation (browser-quality rendering)
+playwright>=1.40.0
+
+# Document to Markdown conversion (Microsoft MarkItDown)
+markitdown[all]>=0.1.4
+
+# Production server
+gevent>=23.0.0
+
