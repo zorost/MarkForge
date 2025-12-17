@@ -149,9 +149,26 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
 
-        .download-card .icon {
-            font-size: 48px;
-            margin-bottom: 16px;
+        .download-card.macos {
+            border-color: rgba(255, 107, 0, 0.3);
+        }
+
+        .download-card.windows {
+            border-color: rgba(0, 120, 212, 0.3);
+        }
+
+        .download-card .platform-icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .download-card .platform-icon svg {
+            width: 48px;
+            height: 48px;
         }
 
         .download-card h3 {
@@ -190,18 +207,13 @@
             height: 20px;
         }
 
-        .download-card.coming-soon {
-            opacity: 0.6;
+        .download-btn.windows-btn {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            box-shadow: 0 4px 20px rgba(0, 120, 212, 0.4);
         }
 
-        .download-card.coming-soon .download-btn {
-            background: var(--text-secondary);
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        .download-card.coming-soon .download-btn:hover {
-            transform: none;
+        .download-btn.windows-btn:hover {
+            box-shadow: 0 6px 24px rgba(0, 120, 212, 0.5);
         }
 
         /* Version Badge */
@@ -241,9 +253,21 @@
             padding: 28px;
         }
 
-        .feature-card .icon {
-            font-size: 32px;
+        .feature-card .feature-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 107, 0, 0.15);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             margin-bottom: 16px;
+        }
+
+        .feature-card .feature-icon svg {
+            width: 22px;
+            height: 22px;
+            color: var(--primary);
         }
 
         .feature-card h3 {
@@ -332,8 +356,12 @@
                 <p>Convert PDF, Word, Excel, PowerPoint, and more to Markdown. Generate beautiful PDFs from Markdown with professional styling.</p>
                 
                 <div class="downloads">
-                    <div class="download-card">
-                        <div class="icon">🍎</div>
+                    <div class="download-card macos">
+                        <div class="platform-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                            </svg>
+                        </div>
                         <h3>macOS</h3>
                         <div class="size">215 MB • macOS 10.13+</div>
                         <a href="https://github.com/zorost/MarkForge/releases/latest/download/MarkForge-macOS.zip" class="download-btn">
@@ -344,16 +372,20 @@
                         </a>
                     </div>
                     
-                    <div class="download-card coming-soon">
-                        <div class="icon">🪟</div>
-                        <h3>Windows</h3>
-                        <div class="size">Coming Soon</div>
-                        <span class="download-btn">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    <div class="download-card windows">
+                        <div class="platform-icon">
+                            <svg viewBox="0 0 24 24" fill="#0078d4">
+                                <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/>
                             </svg>
-                            Coming Soon
-                        </span>
+                        </div>
+                        <h3>Windows</h3>
+                        <div class="size">180 MB • Windows 10+</div>
+                        <a href="https://github.com/zorost/MarkForge/releases/latest/download/MarkForge-Windows.zip" class="download-btn windows-btn">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            Download for Windows
+                        </a>
                     </div>
                 </div>
             </div>
@@ -364,32 +396,57 @@
                 <h2>Features</h2>
                 <div class="features-grid">
                     <div class="feature-card">
-                        <div class="icon">📄</div>
+                        <div class="feature-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
                         <h3>Document to Markdown</h3>
                         <p>Convert PDF, Word, Excel, PowerPoint, HTML, images, EPUB, and more to clean Markdown.</p>
                     </div>
                     <div class="feature-card">
-                        <div class="icon">📑</div>
+                        <div class="feature-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
                         <h3>Markdown to PDF</h3>
                         <p>Generate professionally styled PDFs with proper typography, tables, and code highlighting.</p>
                     </div>
                     <div class="feature-card">
-                        <div class="icon">👁️</div>
+                        <div class="feature-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                        </div>
                         <h3>Live Preview</h3>
                         <p>See your Markdown rendered in real-time as you type with instant preview updates.</p>
                     </div>
                     <div class="feature-card">
-                        <div class="icon">🎨</div>
+                        <div class="feature-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+                            </svg>
+                        </div>
                         <h3>Professional Styling</h3>
                         <p>Beautiful output with modern fonts, smart page breaks, and enterprise-grade formatting.</p>
                     </div>
                     <div class="feature-card">
-                        <div class="icon">📱</div>
+                        <div class="feature-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+                            </svg>
+                        </div>
                         <h3>Multiple Page Sizes</h3>
                         <p>Choose from A4, Letter, Legal, A3, or A5 page sizes for your PDF exports.</p>
                     </div>
                     <div class="feature-card">
-                        <div class="icon">⚡</div>
+                        <div class="feature-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
                         <h3>Fast & Offline</h3>
                         <p>Works completely offline. No internet required for document conversion.</p>
                     </div>
@@ -412,4 +469,3 @@
     </footer>
 </body>
 </html>
-
