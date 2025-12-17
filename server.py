@@ -7,11 +7,17 @@ Enterprise-grade document conversion by Zorost Intelligence
 from flask import Flask, render_template, request, jsonify, Response
 import markdown
 from markitdown import MarkItDown
-from playwright.sync_api import sync_playwright
 import tempfile
 import os
-import asyncio
 from pathlib import Path
+
+# Playwright is optional - used for high-quality PDF generation
+try:
+    from playwright.sync_api import sync_playwright
+    HAS_PLAYWRIGHT = True
+except ImportError:
+    HAS_PLAYWRIGHT = False
+    print("Playwright not available. PDF generation will use fallback method.")
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max upload
@@ -315,17 +321,6 @@ def generate_pdf_bytes(markdown_text: str, page_size: str = "A4") -> bytes:
     """Generate PDF from Markdown using Playwright for high-quality rendering."""
     html_content = convert_markdown_to_html(markdown_text)
     
-    # Page size dimensions
-    page_sizes = {
-        "A4": {"width": "210mm", "height": "297mm"},
-        "Letter": {"width": "8.5in", "height": "11in"},
-        "Legal": {"width": "8.5in", "height": "14in"},
-        "A3": {"width": "297mm", "height": "420mm"},
-        "A5": {"width": "148mm", "height": "210mm"},
-    }
-    
-    size = page_sizes.get(page_size, page_sizes["A4"])
-    
     # Build complete HTML document
     full_html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -339,30 +334,34 @@ def generate_pdf_bytes(markdown_text: str, page_size: str = "A4") -> bytes:
 </body>
 </html>"""
     
-    # Generate PDF using Playwright (browser-based, high quality)
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page()
+    if HAS_PLAYWRIGHT:
+        # Generate PDF using Playwright (browser-based, high quality)
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page()
+            
+            # Set content
+            page.set_content(full_html, wait_until='networkidle')
+            
+            # Generate PDF
+            pdf_bytes = page.pdf(
+                format=page_size if page_size in ['A4', 'A3', 'A5', 'Letter', 'Legal'] else 'A4',
+                margin={
+                    'top': '20mm',
+                    'right': '18mm',
+                    'bottom': '20mm',
+                    'left': '18mm'
+                },
+                print_background=True,
+                prefer_css_page_size=True
+            )
+            
+            browser.close()
         
-        # Set content
-        page.set_content(full_html, wait_until='networkidle')
-        
-        # Generate PDF
-        pdf_bytes = page.pdf(
-            format=page_size if page_size in ['A4', 'A3', 'A5', 'Letter', 'Legal'] else 'A4',
-            margin={
-                'top': '20mm',
-                'right': '18mm',
-                'bottom': '20mm',
-                'left': '18mm'
-            },
-            print_background=True,
-            prefer_css_page_size=True
-        )
-        
-        browser.close()
-    
-    return pdf_bytes
+        return pdf_bytes
+    else:
+        # Fallback: return HTML file as pseudo-PDF (user can print to PDF)
+        raise Exception("PDF generation requires Playwright. Please use the web version for PDF export.")
 
 
 @app.route('/')

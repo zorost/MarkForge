@@ -1,22 +1,9 @@
-# MarkItDown Desktop App Dependencies
-# Python 3.10+ required
-
-# Core conversion library
-markitdown[all]>=0.1.4
-
-# Modern GUI framework
-customtkinter>=5.2.0
-
-# Drag and drop support
-tkinterdnd2>=0.3.0
-
-# PDF export
-markdown>=3.5.0
-weasyprint>=60.0
-
-# For building standalone apps
-pyinstaller>=6.0.0
-
-# macOS specific (optional - for py2app builds)
-# py2app>=0.28.0
-
+# MarkForge Desktop App Dependencies
+markitdown[all]
+customtkinter
+tkinterdnd2
+Pillow
+pywebview
+Flask
+markdown
+playwright

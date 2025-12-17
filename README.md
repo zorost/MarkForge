@@ -234,6 +234,60 @@ CMD ["python", "server.py"]
 
 ---
 
+## Building Desktop Applications
+
+### macOS Build
+
+On macOS, run the build script:
+
+```bash
+# Activate virtual environment
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+pip install pywebview pyinstaller
+
+# Build the app
+python build_mac.py
+
+# Or use PyInstaller directly
+pyinstaller --clean MarkForge.spec
+```
+
+The app will be created at `dist/MarkForge.app` and automatically copied to `/Applications/`.
+
+### Windows Build
+
+On Windows, run:
+
+```powershell
+# Create virtual environment
+python -m venv .venv
+.venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+pip install pywebview pyinstaller pythonnet
+
+# Build the app
+python build_windows.py
+
+# Or use PyInstaller directly
+pyinstaller --clean MarkForge-Windows.spec
+```
+
+The executable will be created at `dist\MarkForge\MarkForge.exe`.
+
+### Build Requirements
+
+| Platform | Requirements |
+|----------|-------------|
+| macOS | Python 3.10+, Xcode Command Line Tools |
+| Windows | Python 3.10+, .NET Framework 4.6.2+ |
+
+---
+
 ## Technology Stack
 
 - **Core Engine:** Microsoft MarkItDown
