@@ -77,3 +77,6 @@ credentials/
 
 # Internal build/generation scripts
 assets/icon.py
+build_mac.py
+build_windows.py
+setup.py

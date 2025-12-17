@@ -106,16 +106,6 @@ The application will be available at `http://localhost:7861`
 python app.py
 ```
 
-### Building the macOS Application
-
-To create a standalone macOS application:
-
-```bash
-python build_mac.py
-```
-
-The built application will be available in the `dist` directory.
-
 ---
 
 ## Usage
