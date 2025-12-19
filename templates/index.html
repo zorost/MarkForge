@@ -1361,7 +1361,38 @@ print(result.text_content)
             setStatus('Text downloaded', true);
         }
 
-        function downloadBlob(blob, filename) {
+        async function downloadBlob(blob, filename) {
+            // Check if running in pywebview desktop app
+            if (window.pywebview) {
+                try {
+                    // Convert blob to base64
+                    const arrayBuffer = await blob.arrayBuffer();
+                    const bytes = new Uint8Array(arrayBuffer);
+                    let binary = '';
+                    for (let i = 0; i < bytes.byteLength; i++) {
+                        binary += String.fromCharCode(bytes[i]);
+                    }
+                    const base64 = btoa(binary);
+                    
+                    // Use native file dialog via pywebview API
+                    const result = await window.pywebview.api.save_file(base64, filename, blob.type);
+                    if (result && result.success) {
+                        setStatus(`Saved to ${result.path}`, true);
+                    } else if (result && result.error && result.error !== 'Save cancelled') {
+                        setStatus('Save failed: ' + result.error, false);
+                    }
+                } catch (error) {
+                    console.error('Desktop save error:', error);
+                    // Fallback to browser download
+                    browserDownload(blob, filename);
+                }
+            } else {
+                // Browser fallback
+                browserDownload(blob, filename);
+            }
+        }
+        
+        function browserDownload(blob, filename) {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
