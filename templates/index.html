@@ -1324,10 +1324,21 @@ print(result.text_content)
             const pageSize = document.getElementById('pageSize').value;
 
             try {
-                // Use form submission for downloads - works better in pywebview
+                // Create hidden iframe for download (doesn't navigate away)
+                let iframe = document.getElementById('downloadFrame');
+                if (!iframe) {
+                    iframe = document.createElement('iframe');
+                    iframe.id = 'downloadFrame';
+                    iframe.name = 'downloadFrame';
+                    iframe.style.display = 'none';
+                    document.body.appendChild(iframe);
+                }
+                
+                // Create form that targets the hidden iframe
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = '/api/download-pdf';
+                form.target = 'downloadFrame';
                 form.style.display = 'none';
                 
                 const markdownInput = document.createElement('input');
@@ -1346,7 +1357,7 @@ print(result.text_content)
                 form.submit();
                 document.body.removeChild(form);
                 
-                setStatus('PDF download started', true);
+                setStatus('PDF downloaded', true);
             } catch (error) {
                 console.error('Conversion error:', error);
                 setStatus('Conversion failed', false);
@@ -1354,10 +1365,20 @@ print(result.text_content)
         }
 
         async function downloadMarkdown(markdown) {
-            // Use form submission for downloads - works better in pywebview
+            // Create hidden iframe for download
+            let iframe = document.getElementById('downloadFrame');
+            if (!iframe) {
+                iframe = document.createElement('iframe');
+                iframe.id = 'downloadFrame';
+                iframe.name = 'downloadFrame';
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+            }
+            
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = '/api/download-markdown';
+            form.target = 'downloadFrame';
             form.style.display = 'none';
             
             const input = document.createElement('input');
@@ -1370,16 +1391,26 @@ print(result.text_content)
             form.submit();
             document.body.removeChild(form);
             
-            setStatus('Markdown download started', true);
+            setStatus('Markdown downloaded', true);
         }
 
         async function downloadText(markdown) {
             const text = stripMarkdown(markdown);
             
-            // Use form submission for downloads - works better in pywebview
+            // Create hidden iframe for download
+            let iframe = document.getElementById('downloadFrame');
+            if (!iframe) {
+                iframe = document.createElement('iframe');
+                iframe.id = 'downloadFrame';
+                iframe.name = 'downloadFrame';
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+            }
+            
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = '/api/download-text';
+            form.target = 'downloadFrame';
             form.style.display = 'none';
             
             const input = document.createElement('input');
@@ -1392,7 +1423,7 @@ print(result.text_content)
             form.submit();
             document.body.removeChild(form);
             
-            setStatus('Text download started', true);
+            setStatus('Text downloaded', true);
         }
 
         async function downloadBlob(blob, filename) {
