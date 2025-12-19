@@ -185,14 +185,16 @@ blockquote p + p {
     margin-top: 0.5em;
 }
 
-/* Tables - NEVER break inside */
+/* Tables - Auto-size columns based on content */
 table {
-    width: 100%;
+    width: auto;
+    max-width: 100%;
     border-collapse: collapse;
     margin: 1em 0;
     font-size: 9pt;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    table-layout: auto;
 }
 
 thead {
@@ -214,16 +216,18 @@ th {
     color: white;
     font-weight: 600;
     text-align: left;
-    padding: 0.6em 0.8em;
+    padding: 0.5em 0.6em;
     border: 1px solid #4b5563;
     font-size: 8pt;
+    white-space: nowrap;
 }
 
 td {
     border: 1px solid #e4e4e7;
-    padding: 0.5em 0.8em;
+    padding: 0.4em 0.6em;
     background: white;
     vertical-align: top;
+    white-space: normal;
 }
 
 tr:nth-child(even) td {
