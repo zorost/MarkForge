@@ -11,13 +11,21 @@ import tempfile
 import os
 from pathlib import Path
 
-# Playwright is optional - used for high-quality PDF generation
+# xhtml2pdf for PDF generation (pure Python, works in bundled apps)
+try:
+    from xhtml2pdf import pisa
+    import io
+    HAS_XHTML2PDF = True
+except ImportError:
+    HAS_XHTML2PDF = False
+    print("xhtml2pdf not available.")
+
+# Playwright is optional - used for high-quality PDF generation (development only)
 try:
     from playwright.sync_api import sync_playwright
     HAS_PLAYWRIGHT = True
 except ImportError:
     HAS_PLAYWRIGHT = False
-    print("Playwright not available. PDF generation will use fallback method.")
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max upload
@@ -25,10 +33,8 @@ app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max upload
 # Initialize MarkItDown converter
 md_converter = MarkItDown()
 
-# Professional PDF CSS - Browser-quality rendering with smart page breaks
+# Professional PDF CSS - Compatible with xhtml2pdf (no external dependencies)
 PDF_CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-
 @page {
     size: A4;
     margin: 20mm 18mm;
@@ -39,7 +45,7 @@ PDF_CSS = """
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: Helvetica, Arial, sans-serif;
     font-size: 10pt;
     line-height: 1.6;
     color: #1a1a1a;
@@ -126,7 +132,7 @@ a {
 
 /* Code blocks - Proper monospace for ASCII diagrams */
 code {
-    font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Consolas', monospace;
+    font-family: Courier, monospace;
     font-size: 0.85em;
     background: #f4f4f5;
     padding: 0.15em 0.4em;
@@ -135,8 +141,8 @@ code {
 }
 
 pre {
-    font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Consolas', monospace;
-    font-size: 7.5pt;
+    font-family: Courier, monospace;
+    font-size: 8pt;
     line-height: 1.4;
     background: #fafafa;
     border: 1px solid #e4e4e7;
@@ -146,8 +152,8 @@ pre {
     margin: 1em 0;
     overflow-x: visible;
     white-space: pre;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
 }
 
 pre code {
@@ -318,15 +324,14 @@ def convert_markdown_to_html(markdown_text: str) -> str:
 
 
 def generate_pdf_bytes(markdown_text: str, page_size: str = "A4") -> bytes:
-    """Generate PDF from Markdown using Playwright for high-quality rendering."""
+    """Generate PDF from Markdown using xhtml2pdf or Playwright."""
     html_content = convert_markdown_to_html(markdown_text)
     
-    # Build complete HTML document
+    # Build complete HTML document with xhtml2pdf-compatible CSS
     full_html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>{PDF_CSS}</style>
 </head>
 <body>
@@ -334,16 +339,30 @@ def generate_pdf_bytes(markdown_text: str, page_size: str = "A4") -> bytes:
 </body>
 </html>"""
     
+    # Try xhtml2pdf first (pure Python, works in bundled apps)
+    if HAS_XHTML2PDF:
+        try:
+            result = io.BytesIO()
+            pisa_status = pisa.CreatePDF(
+                src=full_html,
+                dest=result,
+                encoding='UTF-8'
+            )
+            if pisa_status.err:
+                raise Exception(f"xhtml2pdf error: {pisa_status.err}")
+            return result.getvalue()
+        except Exception as e:
+            print(f"xhtml2pdf error: {e}")
+            # Fall through to Playwright if xhtml2pdf fails
+    
+    # Try Playwright as fallback (for development with browser rendering)
     if HAS_PLAYWRIGHT:
-        # Generate PDF using Playwright (browser-based, high quality)
         with sync_playwright() as p:
             browser = p.chromium.launch()
             page = browser.new_page()
             
-            # Set content
             page.set_content(full_html, wait_until='networkidle')
             
-            # Generate PDF
             pdf_bytes = page.pdf(
                 format=page_size if page_size in ['A4', 'A3', 'A5', 'Letter', 'Legal'] else 'A4',
                 margin={
@@ -359,9 +378,8 @@ def generate_pdf_bytes(markdown_text: str, page_size: str = "A4") -> bytes:
             browser.close()
         
         return pdf_bytes
-    else:
-        # Fallback: return HTML file as pseudo-PDF (user can print to PDF)
-        raise Exception("PDF generation requires Playwright. Please use the web version for PDF export.")
+    
+    raise Exception("No PDF generation library available. Please install xhtml2pdf.")
 
 
 @app.route('/')
@@ -389,7 +407,7 @@ def preview():
 
 @app.route('/api/convert', methods=['POST'])
 def convert():
-    """Convert Markdown to PDF and return the file."""
+    """Convert Markdown to PDF and return the file (JSON API)."""
     try:
         data = request.get_json()
         markdown_text = data.get('markdown', '')
@@ -414,6 +432,75 @@ def convert():
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/download-pdf', methods=['POST'])
+def download_pdf():
+    """Convert Markdown to PDF via form submission (works better in desktop apps)."""
+    try:
+        markdown_text = request.form.get('markdown', '')
+        page_size = request.form.get('pageSize', 'A4')
+        
+        if not markdown_text.strip():
+            return "No content provided", 400
+        
+        # Generate PDF
+        pdf_bytes = generate_pdf_bytes(markdown_text, page_size)
+        
+        # Return as downloadable file
+        return Response(
+            pdf_bytes,
+            mimetype='application/pdf',
+            headers={
+                'Content-Disposition': 'attachment; filename="document.pdf"',
+                'Content-Length': len(pdf_bytes)
+            }
+        )
+    
+    except Exception as e:
+        return f"Error: {str(e)}", 500
+
+
+@app.route('/api/download-markdown', methods=['POST'])
+def download_markdown():
+    """Download markdown content as a file."""
+    try:
+        markdown_text = request.form.get('markdown', '')
+        
+        if not markdown_text.strip():
+            return "No content provided", 400
+        
+        return Response(
+            markdown_text.encode('utf-8'),
+            mimetype='text/markdown',
+            headers={
+                'Content-Disposition': 'attachment; filename="document.md"',
+            }
+        )
+    
+    except Exception as e:
+        return f"Error: {str(e)}", 500
+
+
+@app.route('/api/download-text', methods=['POST'])
+def download_text():
+    """Download plain text content as a file."""
+    try:
+        text = request.form.get('text', '')
+        
+        if not text.strip():
+            return "No content provided", 400
+        
+        return Response(
+            text.encode('utf-8'),
+            mimetype='text/plain',
+            headers={
+                'Content-Disposition': 'attachment; filename="document.txt"',
+            }
+        )
+    
+    except Exception as e:
+        return f"Error: {str(e)}", 500
 
 
 @app.route('/api/upload', methods=['POST'])

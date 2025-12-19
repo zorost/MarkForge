@@ -7,6 +7,8 @@ from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 datas = []
 datas += collect_data_files('markitdown')
 datas += collect_data_files('magika')
+datas += collect_data_files('xhtml2pdf')
+datas += collect_data_files('reportlab')
 
 # Add templates folder
 datas += [('/Users/eloy/Desktop/BIZ 2025/Zorost/Projects/Zorost-APPS/MarkitDown/MarkitDown-App/templates', 'templates')]
@@ -14,6 +16,8 @@ datas += [('/Users/eloy/Desktop/BIZ 2025/Zorost/Projects/Zorost-APPS/MarkitDown/
 # Collect hidden imports
 hiddenimports = collect_submodules('markitdown')
 hiddenimports += collect_submodules('webview')
+hiddenimports += collect_submodules('xhtml2pdf')
+hiddenimports += collect_submodules('reportlab')
 hiddenimports += [
     'webview',
     'flask',
@@ -31,6 +35,25 @@ hiddenimports += [
     'magika',
     'bottle',
     'pyobjc',
+    # xhtml2pdf and dependencies for PDF generation
+    'xhtml2pdf',
+    'xhtml2pdf.pisa',
+    'xhtml2pdf.context',
+    'xhtml2pdf.parser',
+    'xhtml2pdf.w3c',
+    'xhtml2pdf.default',
+    'reportlab',
+    'reportlab.graphics',
+    'reportlab.graphics.barcode',
+    'reportlab.lib',
+    'reportlab.pdfbase',
+    'reportlab.pdfgen',
+    'reportlab.platypus',
+    'svglib',
+    'svglib.svglib',
+    'arabic_reshaper',
+    'html5lib',
+    'pypdf',
 ]
 
 a = Analysis(

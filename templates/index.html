@@ -1324,24 +1324,29 @@ print(result.text_content)
             const pageSize = document.getElementById('pageSize').value;
 
             try {
-                const response = await fetch('/api/convert', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        markdown,
-                        pageSize,
-                        filename: 'document.pdf'
-                    })
-                });
-
-                if (response.ok) {
-                    const blob = await response.blob();
-                    downloadBlob(blob, 'document.pdf');
-                    setStatus('PDF downloaded', true);
-                } else {
-                    const data = await response.json();
-                    setStatus(data.error || 'Conversion failed', false);
-                }
+                // Use form submission for downloads - works better in pywebview
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/api/download-pdf';
+                form.style.display = 'none';
+                
+                const markdownInput = document.createElement('input');
+                markdownInput.type = 'hidden';
+                markdownInput.name = 'markdown';
+                markdownInput.value = markdown;
+                form.appendChild(markdownInput);
+                
+                const pageSizeInput = document.createElement('input');
+                pageSizeInput.type = 'hidden';
+                pageSizeInput.name = 'pageSize';
+                pageSizeInput.value = pageSize;
+                form.appendChild(pageSizeInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+                
+                setStatus('PDF download started', true);
             } catch (error) {
                 console.error('Conversion error:', error);
                 setStatus('Conversion failed', false);
@@ -1349,16 +1354,45 @@ print(result.text_content)
         }
 
         async function downloadMarkdown(markdown) {
-            const blob = new Blob([markdown], { type: 'text/markdown' });
-            downloadBlob(blob, 'document.md');
-            setStatus('Markdown downloaded', true);
+            // Use form submission for downloads - works better in pywebview
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/api/download-markdown';
+            form.style.display = 'none';
+            
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'markdown';
+            input.value = markdown;
+            form.appendChild(input);
+            
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+            
+            setStatus('Markdown download started', true);
         }
 
         async function downloadText(markdown) {
             const text = stripMarkdown(markdown);
-            const blob = new Blob([text], { type: 'text/plain' });
-            downloadBlob(blob, 'document.txt');
-            setStatus('Text downloaded', true);
+            
+            // Use form submission for downloads - works better in pywebview
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/api/download-text';
+            form.style.display = 'none';
+            
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'text';
+            input.value = text;
+            form.appendChild(input);
+            
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+            
+            setStatus('Text download started', true);
         }
 
         async function downloadBlob(blob, filename) {
