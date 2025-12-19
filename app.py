@@ -31,32 +31,16 @@ class Api:
         """Set the window reference after creation."""
         self._window = window
     
-    def save_file(self, content_b64, filename, file_type):
-        """Save file using native file dialog.
-        
-        Args:
-            content_b64: Base64 encoded file content
-            filename: Suggested filename
-            file_type: MIME type (e.g., 'application/pdf', 'text/markdown')
-        """
+    def save_pdf(self, pdf_base64, filename):
+        """Save PDF file using native file dialog."""
         try:
             if not self._window:
                 return {'success': False, 'error': 'Window not initialized'}
             
             # Decode base64 content
-            content = base64.b64decode(content_b64)
+            pdf_content = base64.b64decode(pdf_base64)
             
-            # Determine file extension
-            if file_type == 'application/pdf':
-                default_ext = '.pdf'
-            elif file_type == 'text/markdown':
-                default_ext = '.md'
-            elif file_type == 'text/plain':
-                default_ext = '.txt'
-            else:
-                default_ext = ''
-            
-            # Get default directory (user's Downloads or Documents folder)
+            # Get default directory
             default_dir = os.path.expanduser('~/Downloads')
             if not os.path.exists(default_dir):
                 default_dir = os.path.expanduser('~/Documents')
@@ -67,7 +51,8 @@ class Api:
             save_path = self._window.create_file_dialog(
                 webview.SAVE_DIALOG,
                 directory=default_dir,
-                save_filename=filename
+                save_filename=filename,
+                file_types=('PDF Files (*.pdf)', 'All files (*.*)')
             )
             
             if save_path:
@@ -76,17 +61,87 @@ class Api:
                     save_path = save_path[0] if save_path else None
                 
                 if save_path:
-                    # Ensure correct extension
-                    if default_ext and not save_path.lower().endswith(default_ext):
-                        save_path += default_ext
+                    # Ensure .pdf extension
+                    if not save_path.lower().endswith('.pdf'):
+                        save_path += '.pdf'
                     
                     # Write file
                     with open(save_path, 'wb') as f:
+                        f.write(pdf_content)
+                    
+                    return {'success': True, 'path': save_path}
+            
+            return {'success': False, 'error': 'cancelled'}
+        
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+    
+    def save_markdown(self, content, filename):
+        """Save markdown file using native file dialog."""
+        try:
+            if not self._window:
+                return {'success': False, 'error': 'Window not initialized'}
+            
+            default_dir = os.path.expanduser('~/Downloads')
+            if not os.path.exists(default_dir):
+                default_dir = os.path.expanduser('~')
+            
+            save_path = self._window.create_file_dialog(
+                webview.SAVE_DIALOG,
+                directory=default_dir,
+                save_filename=filename,
+                file_types=('Markdown Files (*.md)', 'All files (*.*)')
+            )
+            
+            if save_path:
+                if isinstance(save_path, (list, tuple)):
+                    save_path = save_path[0] if save_path else None
+                
+                if save_path:
+                    if not save_path.lower().endswith('.md'):
+                        save_path += '.md'
+                    
+                    with open(save_path, 'w', encoding='utf-8') as f:
                         f.write(content)
                     
                     return {'success': True, 'path': save_path}
             
-            return {'success': False, 'error': 'Save cancelled'}
+            return {'success': False, 'error': 'cancelled'}
+        
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+    
+    def save_text(self, content, filename):
+        """Save text file using native file dialog."""
+        try:
+            if not self._window:
+                return {'success': False, 'error': 'Window not initialized'}
+            
+            default_dir = os.path.expanduser('~/Downloads')
+            if not os.path.exists(default_dir):
+                default_dir = os.path.expanduser('~')
+            
+            save_path = self._window.create_file_dialog(
+                webview.SAVE_DIALOG,
+                directory=default_dir,
+                save_filename=filename,
+                file_types=('Text Files (*.txt)', 'All files (*.*)')
+            )
+            
+            if save_path:
+                if isinstance(save_path, (list, tuple)):
+                    save_path = save_path[0] if save_path else None
+                
+                if save_path:
+                    if not save_path.lower().endswith('.txt'):
+                        save_path += '.txt'
+                    
+                    with open(save_path, 'w', encoding='utf-8') as f:
+                        f.write(content)
+                    
+                    return {'success': True, 'path': save_path}
+            
+            return {'success': False, 'error': 'cancelled'}
         
         except Exception as e:
             return {'success': False, 'error': str(e)}

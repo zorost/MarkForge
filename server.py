@@ -434,6 +434,29 @@ def convert():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/api/convert-base64', methods=['POST'])
+def convert_base64():
+    """Convert Markdown to PDF and return as base64 (for desktop app)."""
+    import base64
+    try:
+        data = request.get_json()
+        markdown_text = data.get('markdown', '')
+        page_size = data.get('pageSize', 'A4')
+        
+        if not markdown_text.strip():
+            return jsonify({'error': 'No content provided', 'success': False}), 400
+        
+        # Generate PDF
+        pdf_bytes = generate_pdf_bytes(markdown_text, page_size)
+        
+        # Return as base64
+        pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
+        return jsonify({'pdf_base64': pdf_base64, 'success': True})
+    
+    except Exception as e:
+        return jsonify({'error': str(e), 'success': False}), 500
+
+
 @app.route('/api/download-pdf', methods=['POST'])
 def download_pdf():
     """Convert Markdown to PDF via form submission (works better in desktop apps)."""

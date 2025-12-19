@@ -1324,106 +1324,115 @@ print(result.text_content)
             const pageSize = document.getElementById('pageSize').value;
 
             try {
-                // Create hidden iframe for download (doesn't navigate away)
-                let iframe = document.getElementById('downloadFrame');
-                if (!iframe) {
-                    iframe = document.createElement('iframe');
-                    iframe.id = 'downloadFrame';
-                    iframe.name = 'downloadFrame';
-                    iframe.style.display = 'none';
-                    document.body.appendChild(iframe);
+                setStatus('Generating PDF...', true);
+                
+                // Get PDF as base64 from server
+                const response = await fetch('/api/convert-base64', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ markdown, pageSize })
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    setStatus(data.error || 'PDF generation failed', false);
+                    return;
                 }
                 
-                // Create form that targets the hidden iframe
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/api/download-pdf';
-                form.target = 'downloadFrame';
-                form.style.display = 'none';
-                
-                const markdownInput = document.createElement('input');
-                markdownInput.type = 'hidden';
-                markdownInput.name = 'markdown';
-                markdownInput.value = markdown;
-                form.appendChild(markdownInput);
-                
-                const pageSizeInput = document.createElement('input');
-                pageSizeInput.type = 'hidden';
-                pageSizeInput.name = 'pageSize';
-                pageSizeInput.value = pageSize;
-                form.appendChild(pageSizeInput);
-                
-                document.body.appendChild(form);
-                form.submit();
-                document.body.removeChild(form);
-                
-                setStatus('PDF downloaded', true);
+                // Check if running in pywebview (desktop app)
+                if (window.pywebview && window.pywebview.api) {
+                    // Use native file save dialog
+                    const result = await window.pywebview.api.save_pdf(data.pdf_base64, 'document.pdf');
+                    if (result && result.success) {
+                        setStatus('PDF saved to ' + result.path, true);
+                    } else if (result && result.error) {
+                        setStatus(result.error === 'cancelled' ? 'Save cancelled' : 'Save failed: ' + result.error, false);
+                    }
+                } else {
+                    // Browser fallback - convert base64 to blob and download
+                    const byteCharacters = atob(data.pdf_base64);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray], { type: 'application/pdf' });
+                    
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'document.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    a.remove();
+                    setStatus('PDF downloaded', true);
+                }
             } catch (error) {
                 console.error('Conversion error:', error);
-                setStatus('Conversion failed', false);
+                setStatus('Conversion failed: ' + error.message, false);
             }
         }
 
         async function downloadMarkdown(markdown) {
-            // Create hidden iframe for download
-            let iframe = document.getElementById('downloadFrame');
-            if (!iframe) {
-                iframe = document.createElement('iframe');
-                iframe.id = 'downloadFrame';
-                iframe.name = 'downloadFrame';
-                iframe.style.display = 'none';
-                document.body.appendChild(iframe);
+            try {
+                // Check if running in pywebview (desktop app)
+                if (window.pywebview && window.pywebview.api) {
+                    const result = await window.pywebview.api.save_markdown(markdown, 'document.md');
+                    if (result && result.success) {
+                        setStatus('Saved to ' + result.path, true);
+                    } else if (result && result.error) {
+                        setStatus(result.error === 'cancelled' ? 'Save cancelled' : 'Save failed', false);
+                    }
+                } else {
+                    // Browser fallback
+                    const blob = new Blob([markdown], { type: 'text/markdown' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'document.md';
+                    document.body.appendChild(a);
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    a.remove();
+                    setStatus('Markdown downloaded', true);
+                }
+            } catch (error) {
+                console.error('Download error:', error);
+                setStatus('Download failed', false);
             }
-            
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '/api/download-markdown';
-            form.target = 'downloadFrame';
-            form.style.display = 'none';
-            
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'markdown';
-            input.value = markdown;
-            form.appendChild(input);
-            
-            document.body.appendChild(form);
-            form.submit();
-            document.body.removeChild(form);
-            
-            setStatus('Markdown downloaded', true);
         }
 
         async function downloadText(markdown) {
             const text = stripMarkdown(markdown);
             
-            // Create hidden iframe for download
-            let iframe = document.getElementById('downloadFrame');
-            if (!iframe) {
-                iframe = document.createElement('iframe');
-                iframe.id = 'downloadFrame';
-                iframe.name = 'downloadFrame';
-                iframe.style.display = 'none';
-                document.body.appendChild(iframe);
+            try {
+                // Check if running in pywebview (desktop app)
+                if (window.pywebview && window.pywebview.api) {
+                    const result = await window.pywebview.api.save_text(text, 'document.txt');
+                    if (result && result.success) {
+                        setStatus('Saved to ' + result.path, true);
+                    } else if (result && result.error) {
+                        setStatus(result.error === 'cancelled' ? 'Save cancelled' : 'Save failed', false);
+                    }
+                } else {
+                    // Browser fallback
+                    const blob = new Blob([text], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'document.txt';
+                    document.body.appendChild(a);
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    a.remove();
+                    setStatus('Text downloaded', true);
+                }
+            } catch (error) {
+                console.error('Download error:', error);
+                setStatus('Download failed', false);
             }
-            
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '/api/download-text';
-            form.target = 'downloadFrame';
-            form.style.display = 'none';
-            
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'text';
-            input.value = text;
-            form.appendChild(input);
-            
-            document.body.appendChild(form);
-            form.submit();
-            document.body.removeChild(form);
-            
-            setStatus('Text downloaded', true);
         }
 
         async function downloadBlob(blob, filename) {
